@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>What is a Thought Partner?</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f9f9f8; color: #1a1a1a; min-height: 100vh; display: flex; justify-content: center; padding: 2rem 1rem; }
+  .wrap { width: 100%; max-width: 580px; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 10px; }
+  h2 { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+  p { font-size: 14px; color: #555; line-height: 1.7; margin-bottom: 16px; }
+  input, textarea { width: 100%; border: 0.5px solid #ddd; border-radius: 8px; padding: 9px 12px; font-size: 14px; font-family: inherit; background: #fff; color: #1a1a1a; outline: none; transition: border-color 0.15s; }
+  input:focus, textarea:focus { border-color: #999; }
+  textarea { resize: vertical; }
+  button { cursor: pointer; border: 0.5px solid #ddd; background: #fff; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-family: inherit; color: #1a1a1a; transition: background 0.15s; }
+  button:hover { background: #f0f0ee; }
+  button.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  button.primary:hover { background: #333; }
+  .progress-bar { height: 3px; background: #eee; border-radius: 99px; margin-bottom: 2rem; }
+  .progress-fill { height: 3px; background: #1a1a1a; border-radius: 99px; transition: width 0.3s; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: #999; margin-bottom: 6px; }
+  .behavior-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 6px; background: #fff; border: 0.5px solid #ddd; border-radius: 8px; }
+  .drag-item { cursor: grab; user-select: none; }
+  .drag-item.dragging { background: #f5f5f3; }
+  .drag-item.over { border-color: #999; }
+  .drag-handle { font-size: 18px; color: #aaa; }
+  .rank-num { font-size: 13px; color: #aaa; min-width: 20px; text-align: right; }
+  .tag { font-size: 11px; background: #f5f5f3; border: 0.5px solid #ddd; border-radius: 4px; padding: 2px 6px; color: #888; }
+  .add-box { background: #fff; border: 0.5px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+  .add-box p { margin-bottom: 10px; }
+  .add-box input { margin-bottom: 8px; }
+  .add-box input:last-child { margin-bottom: 0; }
+  .row { display: flex; justify-content: space-between; margin-top: 24px; gap: 12px; }
+  .field-label { font-size: 13px; color: #555; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .field-wrap { margin-bottom: 20px; }
+  .remove-btn { font-size: 12px; padding: 2px 8px; color: #999; }
+  .add-field-btn { font-size: 13px; padding: 6px 14px; color: #888; margin-bottom: 24px; }
+  .success { text-align: center; padding: 3rem 0; }
+  .success .check { font-size: 36px; margin-bottom: 12px; }
+  .summary-section { margin-bottom: 2rem; }
+  .summary-label { font-size: 12px; font-weight: 500; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .summary-item { display: flex; gap: 12px; align-items: baseline; margin-bottom: 6px; font-size: 14px; }
+  .summary-num { color: #aaa; min-width: 20px; }
+  /* Results page */
+  #results-page { display: none; }
+  .results-behavior { margin-bottom: 12px; }
+  .results-label { font-size: 14px; margin-bottom: 4px; }
+  .bar-wrap { height: 6px; background: #eee; border-radius: 99px; }
+  .bar-fill { height: 6px; background: #1a1a1a; border-radius: 99px; }
+  .score-num { font-size: 12px; color: #999; margin-top: 2px; }
+  .open-response { background: #f9f9f8; border: 0.5px solid #ddd; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 14px; color: #333; }
+  .open-q { font-size: 13px; font-weight: 500; color: #555; margin: 20px 0 8px; }
+  .nav-link { font-size: 13px; color: #888; cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; }
+  #pw-gate { margin-bottom: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- SURVEY -->
+  <div id="survey-page">
+    <div class="progress-meta">
+      <span id="step-label">Start</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div id="step-content"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-page">
+    <h1>Results</h1>
+    <div id="pw-gate">
+      <p>Enter the admin password to view results.</p>
+      <input type="password" id="pw-input" placeholder="Password" style="margin-bottom:10px" />
+      <button class="primary" onclick="checkPw()">View results</button>
+      <p id="pw-err" style="color:#c00;margin-top:8px;display:none">Incorrect password.</p>
+    </div>
+    <div id="results-content" style="display:none"></div>
+    <button class="nav-link" style="margin-top:2rem" onclick="showSurvey()">← Back to survey</button>
+  </div>
+
+</div>
+
+<script>
+const API = ''; // Set to your backend URL e.g. https://your-app.onrender.com
+const ADMIN_PW = 'thoughtpartner2025';
+
+const BEHAVIORS = [
+  "Shape decisions, not just present data",
+  "Proactively bring topics, not just respond",
+  "Challenge stakeholders, not just support",
+  "Translate data into insights + actions",
+  "Connect across teams and perspectives",
+  "Influence priorities, not just execute tasks",
+];
+
+const OPEN_FIELDS = [
+  "A thought partner behavior I'd add to this list is…",
+  "The biggest barrier stopping me from being a thought partner is…",
+  "One thing that would help me show up more as a thought partner is…",
+];
+
+const STEPS = ['intro','add','alignment','practice','open','done'];
+let state = {
+  step: 0,
+  name: '',
+  customInputs: ['','',''],
+  allBehaviors: [...BEHAVIORS],
+  customIds: [],
+  alignment: [],
+  practice: [],
+  openAnswers: ['','',''],
+  extraFields: [],
+};
+
+function prog() {
+  const pct = Math.round((state.step / (STEPS.length - 1)) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  const labels = ['Start','Step 1 of 4','Step 2 of 4','Step 3 of 4','Step 4 of 4','Done'];
+  document.getElementById('step-label').textContent = labels[state.step];
+}
+
+function render() {
+  prog();
+  const s = STEPS[state.step];
+  const el = document.getElementById('step-content');
+  if (s === 'intro') el.innerHTML = introHTML();
+  else if (s === 'add') el.innerHTML = addHTML();
+  else if (s === 'alignment') { el.innerHTML = rankHTML('alignment'); attachDrag('alignment'); }
+  else if (s === 'practice') { el.innerHTML = rankHTML('practice'); attachDrag('practice'); }
+  else if (s === 'open') el.innerHTML = openHTML();
+  else if (s === 'done') el.innerHTML = doneHTML();
+}
+
+function introHTML() {
+  return `<h1>What is a thought partner?</h1>
+  <p>This survey explores how our team thinks about thought partnership — there are no right or wrong answers.</p>
+  <label class="field-label">Your name (optional)</label>
+  <input id="name-in" type="text" placeholder="e.g. Alex" value="${state.name}" style="margin-bottom:24px" />
+  <div class="row" style="justify-content:flex-end">
+    <button class="primary" onclick="goIntro()">Start survey</button>
+  </div>
+  <p style="margin-top:2rem"><button class="nav-link" onclick="showResults()">View results →</button></p>`;
+}
+
+function goIntro() {
+  state.name = document.getElementById('name-in').value.trim();
+  state.step = 1; render();
+}
+
+function addHTML() {
+  const items = BEHAVIORS.map(b => `<div class="behavior-item"><span style="font-size:14px">${b}</span></div>`).join('');
+  const inputs = state.customInputs.map((v,i) =>
+    `<input type="text" placeholder="Your behavior ${i+1}…" value="${v}" oninput="state.customInputs[${i}]=this.value" style="margin-bottom:${i<2?'8px':'0'}" />`
+  ).join('');
+  return `<h2>Thought partner behaviors</h2>
+  <p>Here are the behaviors we've identified. Do any feel missing to you? Add up to 3 of your own before we move to ranking.</p>
+  ${items}
+  <div class="add-box" style="margin-top:16px">
+    <p>Anything to add? (optional)</p>
+    ${inputs}
+  </div>
+  <div class="row">
+    <button onclick="state.step=0;render()">Back</button>
+    <button class="primary" onclick="goAdd()">Next — rank by alignment</button>
+  </div>`;
+}
+
+function goAdd() {
+  const added = state.customInputs.map(c => c.trim()).filter(Boolean);
+  state.allBehaviors = [...BEHAVIORS, ...added];
+  state.customIds = added;
+  state.alignment = [...state.allBehaviors];
+  state.practice = [...state.allBehaviors];
+  state.step = 2; render();
+}
+
+function rankHTML(key) {
+  const items = state[key];
+  const title = key === 'alignment' ? 'Alignment ranking' : 'Practice ranking';
+  const desc = key === 'alignment'
+    ? 'Drag and rank from <strong>most</strong> to <strong>least</strong> aligned with what you believe a thought partner is.'
+    : 'Rank from <strong>easiest to put into practice today</strong> to <strong>hardest</strong>.';
+  const prev = key === 'alignment' ? 1 : 2;
+  const next = key === 'alignment' ? 3 : 4;
+  const nextLabel = key === 'alignment' ? 'Next — rank by practice' : 'Next';
+  const rows = items.map((b,i) => {
+    const isCustom = state.customIds.includes(b);
+    return `<div class="behavior-item drag-item" draggable="true" data-idx="${i}">
+      <span class="rank-num">${i+1}</span>
+      <span class="drag-handle">⠿</span>
+      <span style="flex:1;font-size:14px">${b}</span>
+      ${isCustom ? '<span class="tag">yours</span>' : ''}
+    </div>`;
+  }).join('');
+  return `<h2>${title}</h2><p>${desc}</p><div id="rank-list">${rows}</div>
+  <div class="row">
+    <button onclick="state.step=${prev};render()">Back</button>
+    <button class="primary" onclick="state.step=${next};render()">${nextLabel}</button>
+  </div>`;
+}
+
+function attachDrag(key) {
+  const list = document.getElementById('rank-list');
+  let dragging = null;
+  list.querySelectorAll('.drag-item').forEach(el => {
+    el.addEventListener('dragstart', () => { dragging = el; el.classList.add('dragging'); });
+    el.addEventListener('dragend', () => { el.classList.remove('dragging'); dragging = null; });
+    el.addEventListener('dragover', e => { e.preventDefault(); if (dragging && dragging !== el) el.classList.add('over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('over');
+      if (!dragging || dragging === el) return;
+      const items = [...list.querySelectorAll('.drag-item')];
+      const fromIdx = items.indexOf(dragging);
+      const toIdx = items.indexOf(el);
+      const arr = [...state[key]];
+      const [moved] = arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, moved);
+      state[key] = arr;
+      render();
+      if (key === 'alignment') { state.step = 2; } else { state.step = 3; }
+      prog();
+      const el2 = document.getElementById('step-content');
+      el2.innerHTML = rankHTML(key);
+      attachDrag(key);
+    });
+  });
+}
+
+function openHTML() {
+  const fields = OPEN_FIELDS.map((q,i) => `
+    <div class="field-wrap">
+      <div class="field-label">${q}</div>
+      <textarea rows="3" placeholder="Your answer…" oninput="state.openAnswers[${i}]=this.value">${state.openAnswers[i]}</textarea>
+    </div>`).join('');
+  const extra = state.extraFields.map((f,i) => `
+    <div class="field-wrap">
+      <div class="field-label"><span>Your own thought or reflection…</span>
+        <button class="remove-btn" onclick="state.extraFields.splice(${i},1);render()">Remove</button>
+      </div>
+      <textarea rows="3" placeholder="Your answer…" oninput="state.extraFields[${i}]=this.value">${f}</textarea>
+    </div>`).join('');
+  return `<h2>Your thoughts</h2>
+  <p>Share anything else on your mind.</p>
+  ${fields}${extra}
+  <button class="add-field-btn" onclick="state.extraFields.push('');render()">+ Add a field</button>
+  <div class="row">
+    <button onclick="state.step=3;render()">Back</button>
+    <button class="primary" onclick="submitSurvey()">Submit</button>
+  </div>`;
+}
+
+async function submitSurvey() {
+  const payload = {
+    name: state.name,
+    alignment: state.alignment,
+    practice: state.practice,
+    openAnswers: state.openAnswers,
+    extraAnswers: state.extraFields,
+    customBehaviors: state.customIds,
+    timestamp: new Date().toISOString(),
+  };
+  try {
+    await fetch(API + '/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch(e) { console.warn('Submit failed', e); }
+  state.step = 5; render();
+}
+
+function doneHTML() {
+  const aRows = state.alignment.map((b,i) => `<div class="summary-item"><span class="summary-num">${i+1}</span><span>${b}</span></div>`).join('');
+  const pRows = state.practice.map((b,i) => `<div class="summary-item"><span class="summary-num">${i+1}</span><span>${b}</span></div>`).join('');
+  return `<div class="success">
+    <div class="check">✓</div>
+    <h2>Thanks${state.name ? ', ' + state.name : ''}!</h2>
+    <p>Your response has been recorded.</p>
+  </div>
+  <div class="summary-section"><div class="summary-label">Your alignment ranking</div>${aRows}</div>
+  <div class="summary-section"><div class="summary-label">Your practice ranking</div>${pRows}</div>`;
+}
+
+// RESULTS
+function showResults() {
+  document.getElementById('survey-page').style.display = 'none';
+  document.getElementById('results-page').style.display = 'block';
+}
+function showSurvey() {
+  document.getElementById('survey-page').style.display = 'block';
+  document.getElementById('results-page').style.display = 'none';
+}
+
+async function checkPw() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw !== ADMIN_PW) { document.getElementById('pw-err').style.display = 'block'; return; }
+  document.getElementById('pw-gate').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+  await loadResults();
+}
+
+async function loadResults() {
+  const el = document.getElementById('results-content');
+  el.innerHTML = '<p>Loading…</p>';
+  let responses = [];
+  try {
+    const r = await fetch(API + '/responses');
+    responses = await r.json();
+  } catch(e) { el.innerHTML = '<p>Could not load responses. Is the server running?</p>'; return; }
+
+  if (!responses.length) { el.innerHTML = '<p>No responses yet.</p>'; return; }
+
+  const n = responses.length;
+  const allBehaviors = [...new Set(responses.flatMap(r => r.alignment || []))];
+
+  // Compute average rank for alignment and practice
+  function avgRanks(key) {
+    const scores = {};
+    allBehaviors.forEach(b => { scores[b] = []; });
+    responses.forEach(r => {
+      (r[key] || []).forEach((b, i) => { if (scores[b]) scores[b].push(i + 1); });
+    });
+    return Object.entries(scores)
+      .map(([b, ranks]) => ({ b, avg: ranks.length ? ranks.reduce((a,c) => a+c, 0) / ranks.length : 999 }))
+      .sort((a, b) => a.avg - b.avg);
+  }
+
+  const aRanks = avgRanks('alignment');
+  const pRanks = avgRanks('practice');
+  const maxRank = allBehaviors.length;
+
+  function barHTML(ranks) {
+    return ranks.map(({b, avg}) => {
+      const pct = Math.round((1 - (avg - 1) / (maxRank - 1)) * 100);
+      return `<div class="results-behavior">
+        <div class="results-label">${b}</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <div class="score-num">avg rank ${avg.toFixed(1)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Open answers
+  const openQs = OPEN_FIELDS;
+  const openHTML = openQs.map((q, qi) => {
+    const answers = responses.map(r => r.openAnswers?.[qi]).filter(Boolean);
+    const rows = answers.length ? answers.map(a => `<div class="open-response">${a}</div>`).join('') : '<p style="color:#aaa">No answers yet.</p>';
+    return `<div class="open-q">${q}</div>${rows}`;
+  }).join('');
+
+  const extraAnswers = responses.flatMap(r => r.extraAnswers || []).filter(Boolean);
+  const extraHTML = extraAnswers.length ? extraAnswers.map(a => `<div class="open-response">${a}</div>`).join('') : '';
+
+  const customBehaviors = [...new Set(responses.flatMap(r => r.customBehaviors || []).filter(Boolean))];
+  const customHTML = customBehaviors.length
+    ? customBehaviors.map(b => `<div class="open-response">${b}</div>`).join('')
+    : '<p style="color:#aaa">None added.</p>';
+
+  el.innerHTML = `
+    <p style="margin-bottom:24px">${n} response${n !== 1 ? 's' : ''} collected.</p>
+    <h2 style="margin-bottom:16px">Alignment ranking</h2>
+    <p>Average rank across all responses (1 = most aligned).</p>
+    ${barHTML(aRanks)}
+    <h2 style="margin-top:32px;margin-bottom:16px">Practice ranking</h2>
+    <p>Average rank across all responses (1 = easiest to practice).</p>
+    ${barHTML(pRanks)}
+    <h2 style="margin-top:32px;margin-bottom:8px">Behaviors added by the team</h2>
+    ${customHTML}
+    <h2 style="margin-top:32px;margin-bottom:8px">Open responses</h2>
+    ${openHTML}
+    ${extraAnswers.length ? '<div class="open-q">Additional reflections</div>' + extraHTML : ''}
+  `;
+}
+
+render();
+</script>
+</body>
+</html>

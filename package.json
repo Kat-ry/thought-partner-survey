@@ -1,0 +1,12 @@
+{
+  "name": "thought-partner-survey",
+  "version": "1.0.0",
+  "description": "Team survey on thought partnership",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
