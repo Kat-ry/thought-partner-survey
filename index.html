@@ -28,7 +28,7 @@
   .drag-handle { font-size: 18px; color: #aaa; }
   .rank-num { font-size: 13px; color: #aaa; min-width: 20px; text-align: right; }
   .tag { font-size: 11px; background: #f5f5f3; border: 0.5px solid #ddd; border-radius: 4px; padding: 2px 6px; color: #888; }
-  .add-box { background: #fff; border: 0.5px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+  .add-box { background: #fff; border: 0.5px solid #ddd; border-radius: 8px; padding: 16px; margin-top: 16px; margin-bottom: 24px; }
   .add-box p { margin-bottom: 10px; }
   .add-box input { margin-bottom: 8px; }
   .add-box input:last-child { margin-bottom: 0; }
@@ -43,7 +43,6 @@
   .summary-label { font-size: 12px; font-weight: 500; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
   .summary-item { display: flex; gap: 12px; align-items: baseline; margin-bottom: 6px; font-size: 14px; }
   .summary-num { color: #aaa; min-width: 20px; }
-  /* Results page */
   #results-page { display: none; }
   .results-behavior { margin-bottom: 12px; }
   .results-label { font-size: 14px; margin-bottom: 4px; }
@@ -59,7 +58,6 @@
 <body>
 <div class="wrap">
 
-  <!-- SURVEY -->
   <div id="survey-page">
     <div class="progress-meta">
       <span id="step-label">Start</span>
@@ -69,7 +67,6 @@
     <div id="step-content"></div>
   </div>
 
-  <!-- RESULTS -->
   <div id="results-page">
     <h1>Results</h1>
     <div id="pw-gate">
@@ -85,7 +82,7 @@
 </div>
 
 <script>
-const API = ''; // Set to your backend URL e.g. https://your-app.onrender.com
+const API = '';
 const ADMIN_PW = 'thoughtpartner2025';
 
 const BEHAVIORS = [
@@ -103,16 +100,15 @@ const OPEN_FIELDS = [
   "Any other thoughts?",
 ];
 
-const STEPS = ['intro','add','alignment','practice','open','done'];
+const STEPS = ['intro', 'add', 'practice', 'open', 'done'];
 let state = {
   step: 0,
   name: '',
-  customInputs: ['','',''],
+  customInputs: ['', '', ''],
   allBehaviors: [...BEHAVIORS],
   customIds: [],
-  alignment: [],
   practice: [],
-  openAnswers: ['','',''],
+  openAnswers: ['', '', ''],
   extraFields: [],
 };
 
@@ -120,7 +116,7 @@ function prog() {
   const pct = Math.round((state.step / (STEPS.length - 1)) * 100);
   document.getElementById('prog-fill').style.width = pct + '%';
   document.getElementById('prog-pct').textContent = pct + '%';
-  const labels = ['Start','Step 1 of 4','Step 2 of 4','Step 3 of 4','Step 4 of 4','Done'];
+  const labels = ['Start', 'Step 1 of 3', 'Step 2 of 3', 'Step 3 of 3', 'Done'];
   document.getElementById('step-label').textContent = labels[state.step];
 }
 
@@ -130,15 +126,14 @@ function render() {
   const el = document.getElementById('step-content');
   if (s === 'intro') el.innerHTML = introHTML();
   else if (s === 'add') el.innerHTML = addHTML();
-  else if (s === 'alignment') { el.innerHTML = rankHTML('alignment'); attachDrag('alignment'); }
-  else if (s === 'practice') { el.innerHTML = rankHTML('practice'); attachDrag('practice'); }
+  else if (s === 'practice') { el.innerHTML = rankHTML(); attachDrag(); }
   else if (s === 'open') el.innerHTML = openHTML();
   else if (s === 'done') el.innerHTML = doneHTML();
 }
 
 function introHTML() {
   return `<h1>What is a thought partner?</h1>
-  <p>This survey explores how our team thinks about thought partnership — there are no right or wrong answers.</p>
+  <p>This survey explores how our team thinks about thought partnership — there are no right or wrong answers. Your honest perspective is what matters.</p>
   <label class="field-label">Your name (optional)</label>
   <input id="name-in" type="text" placeholder="e.g. Alex" value="${state.name}" style="margin-bottom:24px" />
   <div class="row" style="justify-content:flex-end">
@@ -154,19 +149,19 @@ function goIntro() {
 
 function addHTML() {
   const items = BEHAVIORS.map(b => `<div class="behavior-item"><span style="font-size:14px">${b}</span></div>`).join('');
-  const inputs = state.customInputs.map((v,i) =>
-    `<input type="text" placeholder="Your behavior ${i+1}…" value="${v}" oninput="state.customInputs[${i}]=this.value" style="margin-bottom:${i<2?'8px':'0'}" />`
+  const inputs = state.customInputs.map((v, i) =>
+    `<input type="text" placeholder="Your behavior ${i+1}…" value="${v}" oninput="state.customInputs[${i}]=this.value" style="margin-bottom:${i < 2 ? '8px' : '0'}" />`
   ).join('');
   return `<h2>Thought partner behaviors</h2>
   <p>Here are the behaviors we've identified. Do any feel missing to you? Add up to 3 of your own before we move to ranking.</p>
   ${items}
-  <div class="add-box" style="margin-top:16px">
+  <div class="add-box">
     <p>Anything to add? (optional)</p>
     ${inputs}
   </div>
   <div class="row">
     <button onclick="state.step=0;render()">Back</button>
-    <button class="primary" onclick="goAdd()">Next — rank by alignment</button>
+    <button class="primary" onclick="goAdd()">Next — rank by practice</button>
   </div>`;
 }
 
@@ -174,21 +169,13 @@ function goAdd() {
   const added = state.customInputs.map(c => c.trim()).filter(Boolean);
   state.allBehaviors = [...BEHAVIORS, ...added];
   state.customIds = added;
-  state.alignment = [...state.allBehaviors];
   state.practice = [...state.allBehaviors];
   state.step = 2; render();
 }
 
-function rankHTML(key) {
-  const items = state[key];
-  const title = key === 'alignment' ? 'Alignment ranking' : 'Practice ranking';
-  const desc = key === 'alignment'
-    ? 'Drag and rank from <strong>most</strong> to <strong>least</strong> aligned with what you believe a thought partner is.'
-    : 'Rank from <strong>easiest to put into practice today</strong> to <strong>hardest</strong>.';
-  const prev = key === 'alignment' ? 1 : 2;
-  const next = key === 'alignment' ? 3 : 4;
-  const nextLabel = key === 'alignment' ? 'Next — rank by practice' : 'Next';
-  const rows = items.map((b,i) => {
+function rankHTML() {
+  const items = state.practice;
+  const rows = items.map((b, i) => {
     const isCustom = state.customIds.includes(b);
     return `<div class="behavior-item drag-item" draggable="true" data-idx="${i}">
       <span class="rank-num">${i+1}</span>
@@ -197,14 +184,16 @@ function rankHTML(key) {
       ${isCustom ? '<span class="tag">yours</span>' : ''}
     </div>`;
   }).join('');
-  return `<h2>${title}</h2><p>${desc}</p><div id="rank-list">${rows}</div>
+  return `<h2>Practice ranking</h2>
+  <p>Drag and rank from <strong>easiest to put into practice today</strong> to <strong>hardest</strong>.</p>
+  <div id="rank-list">${rows}</div>
   <div class="row">
-    <button onclick="state.step=${prev};render()">Back</button>
-    <button class="primary" onclick="state.step=${next};render()">${nextLabel}</button>
+    <button onclick="state.step=1;render()">Back</button>
+    <button class="primary" onclick="state.step=3;render()">Next</button>
   </div>`;
 }
 
-function attachDrag(key) {
+function attachDrag() {
   const list = document.getElementById('rank-list');
   let dragging = null;
   list.querySelectorAll('.drag-item').forEach(el => {
@@ -219,27 +208,25 @@ function attachDrag(key) {
       const items = [...list.querySelectorAll('.drag-item')];
       const fromIdx = items.indexOf(dragging);
       const toIdx = items.indexOf(el);
-      const arr = [...state[key]];
+      const arr = [...state.practice];
       const [moved] = arr.splice(fromIdx, 1);
       arr.splice(toIdx, 0, moved);
-      state[key] = arr;
-      render();
-      if (key === 'alignment') { state.step = 2; } else { state.step = 3; }
+      state.practice = arr;
+      state.step = 2;
       prog();
-      const el2 = document.getElementById('step-content');
-      el2.innerHTML = rankHTML(key);
-      attachDrag(key);
+      document.getElementById('step-content').innerHTML = rankHTML();
+      attachDrag();
     });
   });
 }
 
 function openHTML() {
-  const fields = OPEN_FIELDS.map((q,i) => `
+  const fields = OPEN_FIELDS.map((q, i) => `
     <div class="field-wrap">
       <div class="field-label">${q}</div>
       <textarea rows="3" placeholder="Your answer…" oninput="state.openAnswers[${i}]=this.value">${state.openAnswers[i]}</textarea>
     </div>`).join('');
-  const extra = state.extraFields.map((f,i) => `
+  const extra = state.extraFields.map((f, i) => `
     <div class="field-wrap">
       <div class="field-label"><span>Your own thought or reflection…</span>
         <button class="remove-btn" onclick="state.extraFields.splice(${i},1);render()">Remove</button>
@@ -251,7 +238,7 @@ function openHTML() {
   ${fields}${extra}
   <button class="add-field-btn" onclick="state.extraFields.push('');render()">+ Add a field</button>
   <div class="row">
-    <button onclick="state.step=3;render()">Back</button>
+    <button onclick="state.step=2;render()">Back</button>
     <button class="primary" onclick="submitSurvey()">Submit</button>
   </div>`;
 }
@@ -259,7 +246,6 @@ function openHTML() {
 async function submitSurvey() {
   const payload = {
     name: state.name,
-    alignment: state.alignment,
     practice: state.practice,
     openAnswers: state.openAnswers,
     extraAnswers: state.extraFields,
@@ -273,22 +259,19 @@ async function submitSurvey() {
       body: JSON.stringify(payload),
     });
   } catch(e) { console.warn('Submit failed', e); }
-  state.step = 5; render();
+  state.step = 4; render();
 }
 
 function doneHTML() {
-  const aRows = state.alignment.map((b,i) => `<div class="summary-item"><span class="summary-num">${i+1}</span><span>${b}</span></div>`).join('');
-  const pRows = state.practice.map((b,i) => `<div class="summary-item"><span class="summary-num">${i+1}</span><span>${b}</span></div>`).join('');
+  const pRows = state.practice.map((b, i) => `<div class="summary-item"><span class="summary-num">${i+1}</span><span>${b}</span></div>`).join('');
   return `<div class="success">
     <div class="check">✓</div>
     <h2>Thanks${state.name ? ', ' + state.name : ''}!</h2>
     <p>Your response has been recorded.</p>
   </div>
-  <div class="summary-section"><div class="summary-label">Your alignment ranking</div>${aRows}</div>
   <div class="summary-section"><div class="summary-label">Your practice ranking</div>${pRows}</div>`;
 }
 
-// RESULTS
 function showResults() {
   document.getElementById('survey-page').style.display = 'none';
   document.getElementById('results-page').style.display = 'block';
@@ -318,9 +301,9 @@ async function loadResults() {
   if (!responses.length) { el.innerHTML = '<p>No responses yet.</p>'; return; }
 
   const n = responses.length;
-  const allBehaviors = [...new Set(responses.flatMap(r => r.alignment || []))];
+  const allBehaviors = [...new Set(responses.flatMap(r => r.practice || []))];
+  const maxRank = allBehaviors.length;
 
-  // Compute average rank for alignment and practice
   function avgRanks(key) {
     const scores = {};
     allBehaviors.forEach(b => { scores[b] = []; });
@@ -328,16 +311,14 @@ async function loadResults() {
       (r[key] || []).forEach((b, i) => { if (scores[b]) scores[b].push(i + 1); });
     });
     return Object.entries(scores)
-      .map(([b, ranks]) => ({ b, avg: ranks.length ? ranks.reduce((a,c) => a+c, 0) / ranks.length : 999 }))
+      .map(([b, ranks]) => ({ b, avg: ranks.length ? ranks.reduce((a, c) => a + c, 0) / ranks.length : 999 }))
       .sort((a, b) => a.avg - b.avg);
   }
 
-  const aRanks = avgRanks('alignment');
   const pRanks = avgRanks('practice');
-  const maxRank = allBehaviors.length;
 
   function barHTML(ranks) {
-    return ranks.map(({b, avg}) => {
+    return ranks.map(({ b, avg }) => {
       const pct = Math.round((1 - (avg - 1) / (maxRank - 1)) * 100);
       return `<div class="results-behavior">
         <div class="results-label">${b}</div>
@@ -347,17 +328,13 @@ async function loadResults() {
     }).join('');
   }
 
-  // Open answers
-  const openQs = OPEN_FIELDS;
-  const openHTML = openQs.map((q, qi) => {
+  const openHTML = OPEN_FIELDS.map((q, qi) => {
     const answers = responses.map(r => r.openAnswers?.[qi]).filter(Boolean);
     const rows = answers.length ? answers.map(a => `<div class="open-response">${a}</div>`).join('') : '<p style="color:#aaa">No answers yet.</p>';
     return `<div class="open-q">${q}</div>${rows}`;
   }).join('');
 
   const extraAnswers = responses.flatMap(r => r.extraAnswers || []).filter(Boolean);
-  const extraHTML = extraAnswers.length ? extraAnswers.map(a => `<div class="open-response">${a}</div>`).join('') : '';
-
   const customBehaviors = [...new Set(responses.flatMap(r => r.customBehaviors || []).filter(Boolean))];
   const customHTML = customBehaviors.length
     ? customBehaviors.map(b => `<div class="open-response">${b}</div>`).join('')
@@ -365,17 +342,14 @@ async function loadResults() {
 
   el.innerHTML = `
     <p style="margin-bottom:24px">${n} response${n !== 1 ? 's' : ''} collected.</p>
-    <h2 style="margin-bottom:16px">Alignment ranking</h2>
-    <p>Average rank across all responses (1 = most aligned).</p>
-    ${barHTML(aRanks)}
-    <h2 style="margin-top:32px;margin-bottom:16px">Practice ranking</h2>
+    <h2 style="margin-bottom:16px">Practice ranking</h2>
     <p>Average rank across all responses (1 = easiest to practice).</p>
     ${barHTML(pRanks)}
     <h2 style="margin-top:32px;margin-bottom:8px">Behaviors added by the team</h2>
     ${customHTML}
     <h2 style="margin-top:32px;margin-bottom:8px">Open responses</h2>
     ${openHTML}
-    ${extraAnswers.length ? '<div class="open-q">Additional reflections</div>' + extraHTML : ''}
+    ${extraAnswers.length ? '<div class="open-q">Additional reflections</div>' + extraAnswers.map(a => `<div class="open-response">${a}</div>`).join('') : ''}
   `;
 }
 
