@@ -82,7 +82,7 @@
 </div>
 
 <script>
-const API = 'https://thought-partner-survey.onrender.com';
+const API = 'https://script.google.com/macros/s/AKfycbw-Ular76hoM3FGJCHzAQit1IcjpJXS89oKsrmHgXwS0pqZE9iXucX53zgLlD94xz637w/exec';
 const ADMIN_PW = 'thoughtpartner2025';
 
 const BEHAVIORS = [
@@ -253,7 +253,7 @@ async function submitSurvey() {
     timestamp: new Date().toISOString(),
   };
   try {
-    await fetch(API + '/submit', {
+    await fetch(API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
