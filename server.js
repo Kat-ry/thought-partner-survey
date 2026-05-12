@@ -47,6 +47,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const result = await pool.query('SELECT * FROM responses ORDER BY id ASC');
       const rows = result.rows.map(r => ({
+        id: r.id,
         timestamp: r.timestamp,
         name: r.name,
         practice: r.practice ? r.practice.split(' | ') : [],
