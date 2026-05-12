@@ -82,7 +82,7 @@
 </div>
 
 <script>
-const API = 'https://thought-partner-survey.onrender.com';
+const API = '';
 const ADMIN_PW = 'thoughtpartner2025';
 
 const BEHAVIORS = [
@@ -253,7 +253,7 @@ async function submitSurvey() {
     timestamp: new Date().toISOString(),
   };
   try {
-    await fetch(API + '/submit', {
+    await fetch('/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -294,7 +294,7 @@ async function loadResults() {
   el.innerHTML = '<p>Loading…</p>';
   let responses = [];
   try {
-    const r = await fetch(API + '/responses');
+    const r = await fetch('/responses');
     responses = await r.json();
   } catch(e) { el.innerHTML = '<p>Could not load responses. Is the server running?</p>'; return; }
 
@@ -328,17 +328,15 @@ async function loadResults() {
     }).join('');
   }
 
-  const openHTML = OPEN_FIELDS.map((q, qi) => {
-    const answers = responses.map(r => r.openAnswers?.[qi]).filter(Boolean);
-    const rows = answers.length ? answers.map(a => `<div class="open-response">${a}</div>`).join('') : '<p style="color:#aaa">No answers yet.</p>';
-    return `<div class="open-q">${q}</div>${rows}`;
-  }).join('');
-
-  const extraAnswers = responses.flatMap(r => r.extraAnswers || []).filter(Boolean);
-  const customBehaviors = [...new Set(responses.flatMap(r => r.customBehaviors || []).filter(Boolean))];
-  const customHTML = customBehaviors.length
-    ? customBehaviors.map(b => `<div class="open-response">${b}</div>`).join('')
-    : '<p style="color:#aaa">None added.</p>';
+  const openHTML = responses.map(r => `
+    <div style="background:#fff;border:0.5px solid #ddd;border-radius:8px;padding:16px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:500;color:#555">${r.name || 'Anonymous'} — ${new Date(r.timestamp).toLocaleDateString()}</span>
+        <button onclick="deleteResponse(${r.id})" style="font-size:12px;padding:2px 8px;color:#c00;border-color:#c00">Delete</button>
+      </div>
+      ${OPEN_FIELDS.map((q, qi) => r.openAnswers[qi] ? `<div style="margin-bottom:8px"><div style="font-size:12px;color:#999;margin-bottom:2px">${q}</div><div style="font-size:14px;color:#333">${r.openAnswers[qi]}</div></div>` : '').join('')}
+    </div>
+  `).join('');
 
   el.innerHTML = `
     <p style="margin-bottom:24px">${n} response${n !== 1 ? 's' : ''} collected.</p>
@@ -347,10 +345,15 @@ async function loadResults() {
     ${barHTML(pRanks)}
     <h2 style="margin-top:32px;margin-bottom:8px">Behaviors added by the team</h2>
     ${customHTML}
-    <h2 style="margin-top:32px;margin-bottom:8px">Open responses</h2>
+    <h2 style="margin-top:32px;margin-bottom:8px">Individual responses</h2>
     ${openHTML}
-    ${extraAnswers.length ? '<div class="open-q">Additional reflections</div>' + extraAnswers.map(a => `<div class="open-response">${a}</div>`).join('') : ''}
   `;
+}
+
+async function deleteResponse(id) {
+  if (!confirm('Delete this response?')) return;
+  await fetch('/response/' + id, { method: 'DELETE' });
+  await loadResults();
 }
 
 render();

@@ -93,6 +93,20 @@ const server = http.createServer(async (req, res) => {
     }); return;
   }
 
+  // DELETE /response/:id
+  if (req.method === 'DELETE' && req.url.startsWith('/response/')) {
+    const id = req.url.split('/response/')[1];
+    try {
+      await pool.query('DELETE FROM responses WHERE id = $1', [id]);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    } catch (e) {
+      console.error(e);
+      res.writeHead(500); res.end('DB error');
+    }
+    return;
+  }
+
   res.writeHead(404); res.end('Not found');
 });
 
