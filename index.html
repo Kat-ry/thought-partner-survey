@@ -253,7 +253,7 @@ async function submitSurvey() {
     timestamp: new Date().toISOString(),
   };
   try {
-    await fetch(API, {
+    await fetch(API + '/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
